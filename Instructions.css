@@ -1,0 +1,14 @@
+.Instructions{
+	float: right;
+}
+
+#playerConsoleId{
+	overflow-y: scroll;
+	width: 300px;
+	height: 200px;
+	resize: none;
+}
+
+.hideElements{
+	display: none
+}

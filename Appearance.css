@@ -1,0 +1,61 @@
+.instructions,.mainMenu, .options, .shop, .centered{
+	display: block;
+  	margin: auto;
+	width: 50%
+}
+
+.button{
+	width: 10%
+}
+
+.playerConsole{
+	overflow-y: scroll;
+	width: 100%;
+	height : 100%;
+	resize: none;
+	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+}
+
+.canvas{
+	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+}
+
+.hideElements, .toggleHide{
+	display: none
+}
+
+table, th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+	text-align : center;
+}
+
+.submitAction {
+	width : 25%
+}
+
+.inputAmount {
+	width : 15%
+}
+
+.container{
+	max-width: 80%;
+}
+
+
+.tooltip > .tooltip-inner {
+	border: 1px solid;
+	padding: 10px;
+	max-width: 250px;
+	color: black;
+	text-align: left;
+	background-color: white;
+	background: white;
+	 
+	opacity: 1.0;
+	filter: alpha(opacity=100);
+  } 
