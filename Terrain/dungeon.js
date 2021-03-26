@@ -1,3 +1,61 @@
+
+function Database() {
+	this.data = {
+		dungeon: {
+			rooms: {
+
+			},
+			spots: {
+
+			}
+		}
+	}
+
+	this.getSpot = function(x,y) {
+		return this.data.dungeon.spots[x + '_' + y]
+	}
+
+	this.getSpots = function() {
+		return Object.values(this.data.dungeon.spots);
+	}
+
+	this.setSpot = function(spot) {
+		//console.log(spot)
+		this.data.dungeon.spots[spot.x + '_' + spot.y] = spot
+	}
+
+	this.getRoom = function(id) {
+		return this.data.dungeon.rooms[id]
+	}
+
+	this.getRooms = function() {
+		let roomsOrCorridors = Object.values(this.data.dungeon.rooms)
+		let rooms = []
+		for(let elem of roomsOrCorridors) {
+			if(elem.isRoom) {
+				rooms.push(elem)
+			}
+		}
+		return rooms;
+	}
+
+	this.getCorridors = function() {
+		let roomsOrCorridors = Object.values(this.data.dungeon.rooms)
+		let corridors = []
+		for(let elem of roomsOrCorridors) {
+			if(!elem.isRoom) {
+				corridors.push(elem)
+			}
+		}
+		return corridors;
+	}
+
+	this.setRoom = function(room) {
+		this.data.dungeon.rooms[room.id] = room
+	}
+
+}
+
 function Dungeon() {
 	this.rooms = {};
 
@@ -35,7 +93,7 @@ function Dungeon() {
 	this.initializeDungeon = function(){
 		let roomId = 0;
 		this.initializeRoom(roomId,0,0, true);
-		let startRoom = this.getRoom(roomId)		
+		let startRoom = DB.getRoom(roomId)		
 		roomId++;
 		let spotAmount = getRandomInt(this.minRoomSpotAmount, this.maxRoomSpotAmount) - 1;			
 		this.populateRoom(startRoom, spotAmount);
@@ -45,9 +103,9 @@ function Dungeon() {
 		let newRoom = null
 		let goOn = false;
 		while(!goOn) {
-			let walls = startRoom.getAdjacentWallsToSpot(randSpot);
+			let walls = this.getAdjacentWallsToSpot(randSpot);
 			for(let wall of walls) {
-				if(startRoom.getAdjacentWallsToSpot(wall).length > 1) {
+				if(this.getAdjacentWallsToSpot(wall).length > 1) {
 					newRoom = wall;
 					goOn = true;
 				}
@@ -57,19 +115,15 @@ function Dungeon() {
 			randSpot = randExtSpots[rand]
 		}		
 		this.initializeRoom(roomId, newRoom.x, newRoom.y, false);
-		let corridor = this.getCorridor(roomId)
-		console.log(corridor)
+		let corridor = DB.getRoom(roomId)
 		this.populateCorridor(corridor, spotAmount/3)
-	}
-
-	this.getCorridor = function(id) {
-		return this.corridors[id]
 	}
 
 	this.initializeRoom = function(id,x,y, isRoom) {
 		let room = new Room(id,isRoom);
-		let startSpot = room.createNewSpot(x,y,true);
-		room.addSpotToRoom(startSpot);
+		DB.setRoom(room)
+		let startSpot = this.createNewSpot(x,y,true, room);
+		this.addSpotToRoom(startSpot, room);
 		if(isRoom) {
 			this.rooms[room.id] = room;
 		} else {
@@ -82,7 +136,7 @@ function Dungeon() {
 			let randExtSpots = Object.values(room.getExteriorSpots())
 			let rand = getRandomInt(0, randExtSpots.length -1)
 			let randSpot = randExtSpots[rand]
-			room.openAdjacentWall(randSpot)
+			this.openAdjacentWall(randSpot)
 		}	
 		dungeon.updateDungeonMaxMin(room)
 	}
@@ -90,75 +144,53 @@ function Dungeon() {
 	this.populateCorridor = function(room, spotAmount) {
 		let spot = Object.values(room.getExteriorSpots())[0]
 		for(let i = 0; i<spotAmount; i++) {
-			spot = room.openAdjacentWall(spot)
+			spot = this.openAdjacentWall(spot)
 		}
 	}
-}
 
-function Room(id, isRoom) {
-	this.id = id;
-
-	this.spots = {};
-
-	this.minX = null
-
-	this.maxX = null
-
-	this.minY = null
-
-	this.maxY = null
-
-	this.isRoom = isRoom
-
-	this.getSpots = function() {
-		return this.spots;
-	}
-
-	this.exteriorSpots = {};
-
-	this.getExteriorSpots = function() {
-		return this.exteriorSpots;
-	}
-
-	this.createNewSpot = function(x,y,isSpot) {
+	//-----------------
+	this.createNewSpot = function(x,y,isSpot, room) {
 		this.maxY = this.maxY == null ? y : this.maxY < y ? y : this.maxY;
 		this.minY = this.minY == null ? y : this.minY > y ? y : this.minY;
 		this.maxX = this.maxX == null ? x : this.maxX < x ? x : this.maxX;
 		this.minX = this.minY == null ? x : this.minX > x ? x : this.minX; 
-		return new Spot(x,y,isSpot);
+		let spot = new Spot(x,y,isSpot);
+		spot.updateRoomId(room.id)
+		return spot;
 	}
 
-	this.addSpotToRoom = function(spot) {
-		this.spots[spot['id']] = spot;
-		console.log(spot)
-		this.exteriorSpots[spot['id']] = spot
+	this.addSpotToRoom = function(spot, room) {
+		DB.setSpot(spot)
+		//this.spots[spot['id']] = spot;
+		room.exteriorSpots[spot['id']] = spot
 		let x = spot['x'];
 		let y = spot['y'];
-		let left = this.createNewSpot(x-1,y, false);
-		let right = this.createNewSpot(x+1,y, false);
-		let top = this.createNewSpot(x,y-1, false);
-		let bottom = this.createNewSpot(x,y+1, false);
-		if(!this.spots[left['x'] + '_' + left['y']]) {
+		let left = this.createNewSpot(x-1,y, false, room);
+		let right = this.createNewSpot(x+1,y, false, room);
+		let top = this.createNewSpot(x,y-1, false, room);
+		let bottom = this.createNewSpot(x,y+1, false, room);
+		if(!DB.getSpot(left['x'],left['y'])) {
 			this.addWallToRoom(left);
 		}
-		if(!this.spots[right['x'] + '_' + right['y']]) {
+		if(!DB.getSpot(right['x'],right['y'])) {
 			this.addWallToRoom(right);
 		}
-		if(!this.spots[top['x'] + '_' + top['y']]) {
+		if(!DB.getSpot(top['x'],top['y'])) {
 			this.addWallToRoom(top);
 		}
-		if(!this.spots[bottom['x'] + '_' + bottom['y']]) {
+		if(!DB.getSpot(bottom['x'],bottom['y'])) {
 			this.addWallToRoom(bottom);
 		}
 	}
 
-	this.addWallToRoom = function(wall) {		
-		this.spots[wall['id']] = wall;		
+	this.addWallToRoom = function(wall) {
+		DB.setSpot(wall);
+		//this.spots[wall['id']] = wall;		
 	}
 
-	this.getWallsOrSpots = function(isSpot) {
+	this.getSpots = function(isSpot) {
 		let elems = []
-		for(let elem in this.spots) {
+		for(let elem in DB.getSpots()) {
 			if(elem.isSpot) {
 				elems.push(elem)			
 			}
@@ -166,14 +198,31 @@ function Room(id, isRoom) {
 		return elems;
 	}
 
+	this.getAdjacentSpotToWall = function(spot) {
+		let walls =[];
+		let x = spot['x'];
+		let y = spot['y'];
+		let left = DB.getSpot(x-1,y);
+		let right = DB.getSpot(x+1,y);
+		let top = DB.getSpot(x,y-1);
+		let bottom = DB.getSpot(x,y+1);
+		let possibleWalls = [left, right, top, bottom]
+		for(let elem of possibleWalls) {
+			if(elem && elem['isSpot']) {
+				walls.push(elem)
+			}
+		} 
+		return walls;
+	}
+
 	this.getAdjacentWallsToSpot = function(spot) {
 		let walls =[];
 		let x = spot['x'];
 		let y = spot['y'];
-		let left = this.getSpot(x-1,y);
-		let right = this.getSpot(x+1,y);
-		let top = this.getSpot(x,y-1);
-		let bottom = this.getSpot(x,y+1);
+		let left = DB.getSpot(x-1,y);
+		let right = DB.getSpot(x+1,y);
+		let top = DB.getSpot(x,y-1);
+		let bottom = DB.getSpot(x,y+1);
 		let possibleWalls = [left, right, top, bottom]
 		for(let elem of possibleWalls) {
 			if(elem && !elem['isSpot']) {
@@ -184,37 +233,35 @@ function Room(id, isRoom) {
 	}
 
 	this.updateExterior = function(old, newSpot){
-		if(this.getSpot(old.x-1, old.y).isSpot
-			 && this.getSpot(old.x+1, old.y).isSpot
-			 && this.getSpot(old.x, old.y-1).isSpot
-			 && this.getSpot(old.x, old.y+1).isSpot) {
-			delete this.exteriorSpots[old.x+'_'+old.y];
+		let room = DB.getRoom(old.roomId)
+		if(DB.getSpot(old.x-1, old.y).isSpot
+			 && DB.getSpot(old.x+1, old.y).isSpot
+			 && DB.getSpot(old.x, old.y-1).isSpot
+			 && DB.getSpot(old.x, old.y+1).isSpot) {
+			delete room.exteriorSpots[old.x+'_'+old.y];
 	}
-		this.exteriorSpots[newSpot['id']] = newSpot;
-	}
-
-	this.getSpot =function(x,y) {
-		return this.spots[x + '_' + y]
+		room.exteriorSpots[newSpot['id']] = newSpot;
 	}
 
 	this.openWall = function(spot) {
+		let room = DB.getRoom(spot.roomId);
 		spot.openWall();
 		let x = spot['x'];
 		let y = spot['y'];
-		let left = this.createNewSpot(x-1,y, false);
-		let right = this.createNewSpot(x+1,y, false);
-		let top = this.createNewSpot(x,y-1, false);
-		let bottom = this.createNewSpot(x,y+1, false);
-		if(!this.spots[left['x'] + '_' + left['y']]) {
+		let left = this.createNewSpot(x-1,y, false, room);
+		let right = this.createNewSpot(x+1,y, false, room);
+		let top = this.createNewSpot(x,y-1, false, room);
+		let bottom = this.createNewSpot(x,y+1, false, room);
+		if(!DB.getSpot(left['x'],left['y'])) {
 			this.addWallToRoom(left);
 		}
-		if(!this.spots[right['x'] + '_' + right['y']]) {
+		if(!DB.getSpot(right['x'],right['y'])) {
 			this.addWallToRoom(right);
 		}
-		if(!this.spots[top['x'] + '_' + top['y']]) {
+		if(!DB.getSpot(top['x'],top['y'])) {
 			this.addWallToRoom(top);
 		}
-		if(!this.spots[bottom['x'] + '_' + bottom['y']]) {
+		if(!DB.getSpot(bottom['x'], bottom['y'])) {
 			this.addWallToRoom(bottom);
 		}
 	}
@@ -228,9 +275,49 @@ function Room(id, isRoom) {
 			return openSpot;
 		}		
 	}
+
+	this.openAdjacentCorridorWall = function(spot) {
+		let walls = this.getAdjacentWallsToSpot(spot);
+		if(walls.length > 0) {
+			let goOn = false;
+			do {
+				let openSpot = walls[getRandomInt(0, walls.length-1)];
+				if(this.getAdjacentSpotToWall(openSpot).length == 1) {
+					goOn = true;
+				}
+			}while(!goOn)
+			this.openWall(openSpot);			
+			this.updateExterior(spot, openSpot)
+			return openSpot;
+		}		
+	}
+}
+
+function Room(id, isRoom) {
+	this.id = id;
+
+	this.minX = null
+
+	this.maxX = null
+
+	this.minY = null
+
+	this.maxY = null
+
+	this.isRoom = isRoom
+
+	this.exteriorSpots = {};
+
+	this.getExteriorSpots = function() {
+		return this.exteriorSpots;
+	}
+
+	
 }
 
 function Spot(x,y,isSpot) {
+	this.roomId = null;
+
 	this.id = x+'_'+y;
 
 	this.x = x;
@@ -238,6 +325,10 @@ function Spot(x,y,isSpot) {
 	this.y = y;
 
 	this.isSpot = isSpot;
+
+	this.updateRoomId = function(id) {
+		this.roomId = id;
+	}
 
 	this.initializeSpot = function(x,y,isSpot) {
 		return {
@@ -248,8 +339,11 @@ function Spot(x,y,isSpot) {
 		}
 	}
 
-	this.openWall = function() {
+	this.openWall = function() {		
 		this.isSpot = true;
+		//console.log('opened wall')
+		//console.log(this)
+		DB.setSpot(this);
 	}
 }
 
@@ -257,8 +351,8 @@ function Spot(x,y,isSpot) {
 
 
 
-
+let DB = new Database();
 let dungeon = new Dungeon();
 dungeon.initializeDungeon();
 console.log(dungeon)
-console.log(dungeon['rooms']['0']['spots'])
+console.log(DB)

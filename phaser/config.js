@@ -4,7 +4,7 @@ var imageBank  = {
     character: 129,
 }
 var scaling = {
-    global: 1.5,
+    global: 0.75,
     mobs: 0.75,
 }
 var tileSize= scaling.global * 32;
@@ -52,20 +52,18 @@ function create ()
 {
     let walls = this.physics.add.staticGroup();
     let tiles = this.physics.add.staticGroup();
-    let todraw = [...Object.values(dungeon.rooms)]
-    for(let room of todraw) {
-        for(let i = 0; i <= room.maxX - room.minX; i++) {
-            for(let j = 0; j <= room.maxY - room.minY; j++) {
-                let x = i + room.minX;
-                let y = j + room.minY;
-                let spotOrRoom = room.getSpot(i + room.minX, j + room.minY)                
-                if(spotOrRoom) {
-                    if(spotOrRoom.isSpot) {
-                        tiles.create(tileSize * i + tileSize/2, tileSize * j + tileSize/2, 'tilesets', imageBank.tile).setScale(scaling.global).refreshBody();
-                        //this.add.image(32 * i, 32 * j, 'tilesets', imageBank.tile);
-                    } else {
-                        walls.create(tileSize * i+ tileSize/2, tileSize * j+ tileSize/2, 'tilesets', imageBank.wall).setScale(scaling.global).refreshBody();
-                    }
+    let todraw = [...Object.values(DB.getSpots())]
+    for(let i = 0; i <= dungeon.maxX - dungeon.minX; i++) {
+        for(let j = 0; j <= dungeon.maxY - dungeon.minY; j++) {
+            let x = i + dungeon.minX;
+            let y = j + dungeon.minY;
+            let spotOrRoom = DB.getSpot(i + dungeon.minX, j + dungeon.minY)                
+            if(spotOrRoom) {
+                if(spotOrRoom.isSpot) {
+                    tiles.create(tileSize * i + tileSize/2, tileSize * j + tileSize/2, 'tilesets', imageBank.tile).setScale(scaling.global).refreshBody();
+                    //this.add.image(32 * i, 32 * j, 'tilesets', imageBank.tile);
+                } else {
+                    walls.create(tileSize * i+ tileSize/2, tileSize * j+ tileSize/2, 'tilesets', imageBank.wall).setScale(scaling.global).refreshBody();
                 }
             }
         }
