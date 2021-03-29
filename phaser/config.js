@@ -4,15 +4,15 @@ var imageBank  = {
     character: 129,
 }
 var scaling = {
-    global: 0.75,
+    global: 1,
     mobs: 0.75,
 }
 var tileSize= scaling.global * 32;
 var movespeed = scaling.global * 160;
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 1800,
+    height: 1600,
     physics: {
         default: 'arcade',
         arcade: {
@@ -52,30 +52,27 @@ function create ()
 {
     let walls = this.physics.add.staticGroup();
     let tiles = this.physics.add.staticGroup();
-    let todraw = [...Object.values(DB.getSpots())]
+    let todraw = Object.values(DB.getSpots())
     for(let i = 0; i <= dungeon.maxX - dungeon.minX; i++) {
         for(let j = 0; j <= dungeon.maxY - dungeon.minY; j++) {
             let x = i + dungeon.minX;
-            let y = j + dungeon.minY;
-            let spotOrRoom = DB.getSpot(i + dungeon.minX, j + dungeon.minY)                
+            let y = -j + dungeon.maxY;
+            let spotOrRoom = DB.getSpot(x, y)                
             if(spotOrRoom) {
                 if(spotOrRoom.isSpot) {
-                    tiles.create(tileSize * i + tileSize/2, tileSize * j + tileSize/2, 'tilesets', imageBank.tile).setScale(scaling.global).refreshBody();
-                    //this.add.image(32 * i, 32 * j, 'tilesets', imageBank.tile);
+                    tiles.create(tileSize * i + tileSize/2, 1*(tileSize * j) + tileSize/2, 'tilesets', imageBank.tile).setScale(scaling.global).refreshBody();
                 } else {
-                    walls.create(tileSize * i+ tileSize/2, tileSize * j+ tileSize/2, 'tilesets', imageBank.wall).setScale(scaling.global).refreshBody();
+                    walls.create(tileSize * i+ tileSize/2, 1*(tileSize * j)+ tileSize/2, 'tilesets', imageBank.wall).setScale(scaling.global).refreshBody();
                 }
+                this.add.text(tileSize * i+ tileSize/2 - 15, 1*(tileSize * j)+ tileSize/2,spotOrRoom.id, {fontSize: "10px"});
+
             }
         }
     }
     
 
 
-    //  Here we create the ground.
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    //  Now let's create some ledges
-    // The player and its settings
-    player = this.physics.add.sprite(tileSize * (-1 * dungeon.minX), tileSize * (-1 * dungeon.minY), 'tilesets', 129).setScale(scaling.global* scaling.mobs).refreshBody();
+    player = this.physics.add.sprite(tileSize * (-1 * dungeon.minX) + tileSize/2, tileSize * (dungeon.maxY) + tileSize/2, 'tilesets', 129).setScale(scaling.global* scaling.mobs).refreshBody();
 
     //  Player physics properties. Give the little guy a slight bounce.
     //player.setCollideWorldBounds(true);

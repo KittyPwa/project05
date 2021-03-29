@@ -52,3 +52,26 @@ function capitalizeFirstLetter(string) {
 function lowerFirstLetter(string) {
     return string.charAt(0).toLowerCase() + string.slice(1);
 }
+
+var direction = {
+    left: {
+        id: 0,
+        name: 'left',
+        opposite: 2
+    },
+    up: {
+        name: 'up',
+        id:1,
+        opposite: 3
+    },
+    right: {
+        name: 'right',
+        id: 2,
+        opposite: 0
+    },
+    down: {
+        name: 'down',
+        id: 3,
+        opposite: 1
+    }
+}
