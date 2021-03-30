@@ -108,8 +108,11 @@ function Dungeon() {
 		this.spotAmount = getRandomInt(this.minRoomSpotAmount, this.maxRoomSpotAmount) - 1;	
 		this.createRoom(null)		
 		console.log(DB)
-		for(let i = 0; i < 10; i++) {
+		for(let i = 0; i < 1; i++) {
 			let startRoom = DB.getRoom(this.currentRoomId - 1)
+			let extreme = startRoom.getExtremeSpots();
+			console.log(extreme)
+			console.log(startRoom)
 			this.createcorridor(startRoom);
 			startRoom = DB.getRoom(this.currentRoomId - 1)
 			stoper = true;
@@ -225,6 +228,38 @@ function Dungeon() {
 		return true
 	}
 
+	this.majDirection = function(spot) {
+		let ret = [];
+		room = DB.getRoom(oldSpot.roomId)
+		if(spot.x = room.minX) {
+			ret.push(direction.left)
+		}
+		if(spot.x = room.maxX) {
+			ret.push(direction.right)
+		}
+		if(spot.y = room.minY) {
+			ret.push(direction.down)
+		}
+		if(spot.y = room.maxY) {
+			ret.push(direction.up)
+		}
+	}
+
+	this.majoritaryDirection = function(oldSpot, newSpot) {
+		let ret = [];
+		let room = DB.getRoom(oldSpot.roomId)
+		let xDiff = Math.abs(newSpot.x - oldSpot.x);
+		let yDiff = Math.abs(newSpot.y - oldSpot.y);
+		
+		if(xDiff > yDiff) {
+
+		} else if (xDiff < yDiff){
+
+		} else {
+
+		}
+	}
+
 	this.getDirection = function(oldSpot, newSpot) {
 		let ret = direction.right
 		if(oldSpot.x > newSpot.x) {
@@ -244,7 +279,7 @@ function Dungeon() {
 		room.maxY = room.maxY == null ? spot.y : room.maxY < spot.y ? spot.y : room.maxY;
 		room.minY = room.minY == null ? spot.y : room.minY > spot.y ? spot.y : room.minY;
 		room.maxX = room.maxX == null ? spot.x : room.maxX < spot.x ? spot.x : room.maxX;
-		room.minX = room.minY == null ? spot.x : room.minX > spot.x ? spot.x : room.minX; 
+		room.minX = room.minX == null ? spot.x : room.minX > spot.x ? spot.x : room.minX; 
 		spot.updateRoomId(room.id)
 		room.addSpot(spot)
 		return spot;
@@ -425,10 +460,35 @@ function Room(id, isRoom) {
 
 	this.lastSpot = null;
 
+	this.directions = {};
+
 	this.addSpot = function(spot) {
 		if(!this.spots[spot.id]){
 			this.spots[spot.id] = spot		
 		}
+	}
+
+	this.getExtremeSpots = function() {
+		let ret = []
+		let min = this.minX < this.minY ? this.minX : this.minY;
+		let max = this.maxX > this.maxY ? this.maxX : this.maxY;
+		let elementsX = [this.minX, this.maxX];
+		let elementsY = [this.minY, this.maxY]
+		for(let i = min; i < max; i++) {
+			for(let elem of elementsX) {
+				let spot = DB.getSpot(elem, i);
+				if(spot) {
+					ret.push(spot)
+				}
+			}
+			for(let elem of elementsY) {
+				let spot = DB.getSpot(i, elem)
+				if(spot) {
+					ret.push(spot)
+				}
+			}
+		}
+		return ret;
 	}
 
 	this.updateSpot = function(spot) {

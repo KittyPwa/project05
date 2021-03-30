@@ -11,8 +11,8 @@ var tileSize= scaling.global * 32;
 var movespeed = scaling.global * 160;
 var config = {
     type: Phaser.AUTO,
-    width: 1800,
-    height: 1600,
+    width: 3000,
+    height: 3000,
     physics: {
         default: 'arcade',
         arcade: {
