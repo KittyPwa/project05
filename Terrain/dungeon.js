@@ -57,7 +57,6 @@ function Database() {
 
 	this.updateBase = function(){
 		let rooms = [...Object.values(this.getRooms()), ...Object.values(this.getCorridors())]
-		console.log(rooms)
 		for(let room of rooms) {
 			for(let spot of Object.values(room.spots)) {
 				this.setSpot(spot)
@@ -108,17 +107,14 @@ function Dungeon() {
 	this.initializeDungeon = function(){
 		this.spotAmount = getRandomInt(this.minRoomSpotAmount, this.maxRoomSpotAmount) - 1;	
 		this.createRoom(null)		
-		for(let i = 0; i < 1; i++) {
-			console.log(this.currentRoomId)
+		console.log(DB)
+		for(let i = 0; i < 10; i++) {
 			let startRoom = DB.getRoom(this.currentRoomId - 1)
 			this.createcorridor(startRoom);
 			startRoom = DB.getRoom(this.currentRoomId - 1)
+			stoper = true;
 			this.createRoom(startRoom)
-		}
-		startRoom = DB.getRoom(this.currentRoomId - 1)
-		console.log(startRoom)
-		let stoper = true;
-		this.createcorridor(startRoom);
+		}		
 		let allRooms = [...Object.values(this.rooms), ...Object.values(this.corridors)]
 		for(let room of allRooms) {
 			this.updateDungeonMaxMin(room)
@@ -130,36 +126,51 @@ function Dungeon() {
 		if(prevCorridor == null) {
 			this.initializeRoom(this.currentRoomId,0,0, true);
 		} else {
-			this.initializeRoom(this.currentRoomId,prevCorridor.lastSpot.x, prevCorridor.lastSpot.y, true)
+			let newSpot = this.findAdjacentSpotToStart(prevCorridor);		
+			this.initializeRoom(this.currentRoomId,newSpot.x, newSpot.y, true)
 		}
 		let startRoom = DB.getRoom(this.currentRoomId)		
 		this.populateRoom(startRoom, this.spotAmount);
 		this.currentRoomId++;
 	}
 
-	this.createcorridor = function(prevRoom) {
-		let randExtSpots = Object.values(prevRoom.getExteriorSpots())
-		let rand = getRandomInt(0, randExtSpots.length -1)
-		let randSpot = randExtSpots[rand]
-		let newRoom = null
-		let goOn = false;
-		while(!goOn) {
-			let walls = this.getAdjacentWallsToSpot(randSpot);
-			for(let wall of walls) {
-				if(this.getAdjacentWallsToSpot(wall).length > 1) {
-					newRoom = wall;
-					goOn = true;
-				}
-			}
-			randExtSpots = Object.values(prevRoom.getExteriorSpots())
-			rand = getRandomInt(0, randExtSpots.length -1)
-			randSpot = randExtSpots[rand]
+	this.findAdjacentSpotToStart = function(prevRoom) {
+		let randExtSpots = []
+		if(!prevRoom.isRoom) {
+			randExtSpots = [prevRoom.lastSpot];
+		} else {
+			randExtSpots = Object.values(prevRoom.getExteriorSpots());
 		}		
-		this.initializeRoom(this.currentRoomId, newRoom.x, newRoom.y, false);
+		let newSpot = null
+		let goOn = false;
+		let counter = 1
+		randExtSpots = shuffleArray(randExtSpots);
+		for(let randSpot of randExtSpots) {
+			let walls = this.getAdjacentWallsToSpot(randSpot);
+			walls = shuffleArray(walls);
+			for(let wall of walls) {
+				if(prevRoom.isRoom) {
+					if(this.getAdjacentSpotToWall(wall.length > 1)) {
+						newSpot = wall
+					}	
+				} else {
+					if(this.getAdjacentWallsToSpot(wall).length == 1) {
+						newSpot = wall;
+					}
+				}				
+			}
+		}
+		return newSpot
+	}
+
+	this.createcorridor = function(prevRoom) {
+		let newSpot = this.findAdjacentSpotToStart(prevRoom);
+		this.initializeRoom(this.currentRoomId, newSpot.x, newSpot.y, false);
 		let corridor = DB.getRoom(this.currentRoomId)
-		console.log(this.currentRoomId)
-		this.populateCorridor(corridor, this.spotAmount/3)
-		this.currentRoomId++;
+		let res = this.populateCorridor(corridor, this.spotAmount/3)
+		if(res) {
+			this.currentRoomId++;
+		}
 	}
 
 	this.initializeRoom = function(id,x,y, isRoom) {
@@ -167,9 +178,6 @@ function Dungeon() {
 		DB.setRoom(room)
 		let startSpot = new Spot(x,y,true, room);
 		this.updateNewSpot(startSpot, room)
-		if(!isRoom) {
-			stoper = true;
-		}
 		this.addSpotToRoom(startSpot, room);
 		if(isRoom) {
 			this.rooms[room.id] = room;
@@ -188,40 +196,33 @@ function Dungeon() {
 	}
 
 	this.destroyRoom = function(room) {
+		console.log('DESTROY ROOM: ' + room)
 		let spots = Object.values(room.spots);
 		for(let spot of spots) {
 			delete DB.data.dungeon.spots[spot.id]
 		}
 		delete DB.data.dungeon.rooms[room.id]
-		this.currentRoomId--;
 	}
 
 	this.populateCorridor = function(room, spotAmount) {
-		console.log(room)
 		let oldSpot = Object.values(room.getExteriorSpots())[0]
 		let spot = this.openAdjacentCorridorWall(oldSpot, null)
 		if(spot == null) {
 			this.destroyRoom(room)
 			this.createcorridor(DB.getRoom(room.id - 1), room.id, spotAmount)
-			return;
+			return null;
 		}
 		let direction = this.getDirection(oldSpot, spot)
-		console.log(direction)
-		console.log(oldSpot)
-		console.log(spot)
-				if(stoper) {
-			console.log('got here');
-			bl
-		}
 		for(let i = 0; i<spotAmount-1; i++) {
 			spot = this.openAdjacentCorridorWall(spot, direction)
 			room.lastSpot = spot
 			if(spot == null) {
 				this.destroyRoom(room)
 				this.createcorridor(DB.getRoom(room.id - 1), room.id, spotAmount)
-				return
+				return null;
 			}
 		}
+		return true
 	}
 
 	this.getDirection = function(oldSpot, newSpot) {
@@ -385,10 +386,7 @@ function Dungeon() {
 	this.openAdjacentCorridorWall = function(spot, direction) {
 		let walls = this.getAdjacentWallsToSpot(spot);
 		if(direction) {
-			//console.log(direction)
-			//console.log(walls)
 			walls = this.filterDirection(spot, walls, direction);
-			//console.log(walls)
 		}
 		if(walls.length > 0) {
 			let goOn = false;

@@ -64,7 +64,7 @@ function create ()
                 } else {
                     walls.create(tileSize * i+ tileSize/2, 1*(tileSize * j)+ tileSize/2, 'tilesets', imageBank.wall).setScale(scaling.global).refreshBody();
                 }
-                this.add.text(tileSize * i+ tileSize/2 - 15, 1*(tileSize * j)+ tileSize/2,spotOrRoom.id, {fontSize: "10px"});
+                this.add.text(tileSize * i+ tileSize/2 - 15, 1*(tileSize * j)+ tileSize/2,spotOrRoom.id, {fontSize: "9px"});
 
             }
         }
