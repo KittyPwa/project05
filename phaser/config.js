@@ -4,7 +4,7 @@ var imageBank  = {
     character: 129,
 }
 var scaling = {
-    global: 1,
+    global: 0.25,
     mobs: 0.75,
 }
 var tileSize= scaling.global * 32;
@@ -64,7 +64,7 @@ function create ()
                 } else {
                     walls.create(tileSize * i+ tileSize/2, 1*(tileSize * j)+ tileSize/2, 'tilesets', imageBank.wall).setScale(scaling.global).refreshBody();
                 }
-                this.add.text(tileSize * i+ tileSize/2 - 15, 1*(tileSize * j)+ tileSize/2,spotOrRoom.id, {fontSize: "9px"});
+                //this.add.text(tileSize * i+ tileSize/2 - 15, 1*(tileSize * j)+ tileSize/2,spotOrRoom.id, {fontSize: "9px"});
 
             }
         }
@@ -72,38 +72,16 @@ function create ()
     
 
 
+    player = new player(this);
     player = this.physics.add.sprite(tileSize * (-1 * dungeon.minX) + tileSize/2, tileSize * (dungeon.maxY) + tileSize/2, 'tilesets', 129).setScale(scaling.global* scaling.mobs).refreshBody();
 
-    //  Player physics properties. Give the little guy a slight bounce.
-    //player.setCollideWorldBounds(true);
-
-    //  Our player animations, turning, walking left and walking right.
-/*    this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('tilesets', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'turn',
-        frames: [ { key: 'tilesets', frame: 4 } ],
-        frameRate: 20
-    });
-
-    this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('tilesets', { start: 64, end: 66 }),
-        frameRate: 10,
-        repeat: -1
-    });
-*/
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
 
     //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
 
     //  Collide the player and the stars with the platforms
+    //this.physics.add.collider(player.sprite, walls);
     this.physics.add.collider(player, walls);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
@@ -148,6 +126,8 @@ function update ()
     }*/
         player.setVelocityX(xvelocity);
         player.setVelocityY(yvelocity);
+        /*player.sprite.setVelocityX(xvelocity);
+        player.sprite.setVelocityY(yvelocity);*/
 
         // player.anims.play('turn',true);
         

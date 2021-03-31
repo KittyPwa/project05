@@ -1,7 +1,6 @@
 function store(item) {
 	localStorage.setItem(item.type[0] + item.id, JSON.stringify(item));	
 }
-console.log('test')
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -83,3 +82,4 @@ var direction = {
         opposite: 1
     }
 }
+
