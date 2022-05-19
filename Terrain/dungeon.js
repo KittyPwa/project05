@@ -66,7 +66,7 @@ function Database() {
 
 }
 
-function Dungeon(roomAmount, minRoomSpot, maxRoomSpot) {
+function Dungeon(roomAmount, minRoomSpot, maxRoomSpot, corridorLength) {
 	this.rooms = {};
 
 	this.currentRoomId = 0;
@@ -93,6 +93,8 @@ function Dungeon(roomAmount, minRoomSpot, maxRoomSpot) {
 	this.maxRoomSpotAmount = maxRoomSpot;
 	
 	this.minRoomSpotAmount = minRoomSpot;
+
+	this.corridorLength = corridorLength;
 
 	this.roomAmount = roomAmount;
 
@@ -305,7 +307,6 @@ function Dungeon(roomAmount, minRoomSpot, maxRoomSpot) {
 	}
 
 	this.destroyRoom = function(room) {
-		console.log('DESTROY ROOM: ' + room)
 		let spots = Object.values(room.spots);
 		for(let spot of spots) {
 			delete DB.data.dungeon.spots[spot.id]
@@ -314,7 +315,10 @@ function Dungeon(roomAmount, minRoomSpot, maxRoomSpot) {
 		this.updateBase()	
 	}
 
-	this.populateCorridor = function(room, spotAmount) {
+	this.populateCorridor = function(room, corridorLength) {
+		if (this.corridorLength != null) {
+			corridorLength = this.corridorLength
+		}
 		let oldSpot = Object.values(room.getExteriorSpots())[0]
 		let spot = this.openAdjacentCorridorWall(oldSpot, null)
 		if(spot == null) {
@@ -322,7 +326,7 @@ function Dungeon(roomAmount, minRoomSpot, maxRoomSpot) {
 			return null;
 		}
 		let direction = this.getDirection(oldSpot, spot)
-		for(let i = 0; i<spotAmount-1; i++) {
+		for(let i = 0; i<corridorLength-1; i++) {
 			spot = this.openAdjacentCorridorWall(spot, direction)
 			room.lastSpot = spot
 			if(spot == null) {
@@ -657,7 +661,7 @@ function Spot(x,y,isSpot) {
 
 
 let DB = new Database();
-let dungeon = new Dungeon(1000, 45, 100);
+let dungeon = new Dungeon(20, 45, 100, 200);
 dungeon.initializeDungeon();
-console.log(dungeon)
+console.log(dungeon)	
 console.log(DB)
